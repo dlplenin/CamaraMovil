@@ -1,0 +1,35 @@
+﻿@page "/single"
+@inject HttpClient client;
+<h3>Foto única</h3>
+
+Camara:
+<InputFile OnChange="HandleSelection" accept="image/*" capture/>
+
+Galería:
+<InputFile OnChange="HandleSelection" accept="image/*"/>
+
+<p>@status</p>
+
+@code {
+    string status;
+
+    async Task HandleSelection(IFileListEntry[] files)
+    {
+        var file = files.FirstOrDefault();
+        if(file != null)
+        {
+            var ms = new MemoryStream();
+            await file.Data.CopyToAsync(ms);
+
+            status = $"Se cargó {file.Size} bytes del archivo: {file.Name}";
+
+            // Llamar al servidor
+            var content = new MultipartFormDataContent
+            {
+                { new ByteArrayContent(ms.GetBuffer()), "\"upload\"", file.Name }
+            };
+
+            await client.PostAsync("upload", content);
+        }
+    }
+}
